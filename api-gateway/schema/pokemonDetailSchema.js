@@ -45,7 +45,10 @@ const resolvers = {
           url: baseUrl + `/${id}`,
         });
         const abilities = data.abilities.map((e) => {
-          return { name: e.ability.name };
+          return {
+            name: e.ability.name,
+            isHidden: e["is_hidden"],
+          };
         });
         const stats = data.stats.map((e) => {
           return {
