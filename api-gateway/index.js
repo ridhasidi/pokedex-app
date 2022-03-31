@@ -1,12 +1,13 @@
 const { ApolloServer } = require("apollo-server");
 
 const pokemon = require("./schema/pokemonsSchema");
+const pokemonDetail = require("./schema/pokemonDetailSchema");
 
 // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.
 const server = new ApolloServer({
-  typeDefs: [pokemon.typeDefs],
-  resolvers: [pokemon.resolvers],
+  typeDefs: [pokemon.typeDefs, pokemonDetail.typeDefs],
+  resolvers: [pokemon.resolvers, pokemonDetail.resolvers],
 });
 
 // The `listen` method launches a web server.
