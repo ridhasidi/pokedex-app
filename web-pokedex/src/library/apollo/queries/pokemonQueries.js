@@ -18,6 +18,7 @@ export const GET_POKEMON_DETAIL = gql`
   query GetOnePokemon($getOnePokemonId: ID) {
     getOnePokemon(id: $getOnePokemonId) {
       id
+      baseExp
       name
       abilities {
         name

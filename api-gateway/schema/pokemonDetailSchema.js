@@ -4,6 +4,7 @@ const axios = require("axios");
 const typeDefs = gql`
   type PokemonDetail {
     id: ID
+    baseExp: Int
     name: String
     height: Int
     weight: Int
@@ -70,6 +71,7 @@ const resolvers = {
         const photoUrl = data?.sprites.other["official-artwork"]["front_default"];
         const result = {
           id: data.id,
+          baseExp: data["base_experience"],
           name: data.name,
           height: data.height,
           weight: data.weight,
