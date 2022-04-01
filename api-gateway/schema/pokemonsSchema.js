@@ -1,5 +1,6 @@
 const { gql } = require("apollo-server");
 const axios = require("axios");
+const { redis } = require("../config/redis");
 
 const typeDefs = gql`
   type Pokemon {
@@ -25,12 +26,16 @@ const resolvers = {
   Query: {
     getPokemons: async () => {
       try {
-        const { data } = await axios({
+        const cachePokemons = await redis.get("pokemons");
+        if (cachePokemons) {
+          return JSON.parse(cachePokemons);
+        }
+        const resp = await axios({
           method: "GET",
           url: baseUrl,
         });
         const result = await Promise.all(
-          data.results.map(async (e) => {
+          resp?.data.results.map(async (e) => {
             const resp = await axios({
               method: "GET",
               url: e.url,
@@ -49,6 +54,10 @@ const resolvers = {
             };
           })
         );
+
+        if (resp.status === 200) {
+          await redis.set("pokemons", JSON.stringify(result));
+        }
         return result;
       } catch (error) {
         return error.response.data;
