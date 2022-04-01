@@ -1,5 +1,6 @@
 const { gql } = require("apollo-server");
 const axios = require("axios");
+const { redis } = require("../config/redis");
 
 const typeDefs = gql`
   type PokemonDetail {
@@ -41,46 +42,54 @@ const resolvers = {
     getOnePokemon: async (_, args) => {
       try {
         const { id } = args;
-        const { data } = await axios({
+        const cachePokeDetail = await redis.get("pokemonDetail");
+        const pokeDetail = JSON.parse(cachePokeDetail);
+        if (cachePokeDetail && +pokeDetail.id === +id) {
+          return pokeDetail;
+        }
+        const resp = await axios({
           method: "GET",
           url: baseUrl + `/${id}`,
         });
-        const abilities = data.abilities.map((e) => {
+        const abilities = resp?.data.abilities.map((e) => {
           return {
             name: e.ability.name,
             isHidden: e["is_hidden"],
           };
         });
-        const stats = data.stats.map((e) => {
+        const stats = resp?.data.stats.map((e) => {
           return {
             name: e.stat.name,
             base_stat: e.base_stat,
           };
         });
-        const types = data.types.map((e) => {
+        const types = resp?.data.types.map((e) => {
           return {
             slot: e.slot,
             name: e.type.name,
           };
         });
-        const moves = data.moves.map((e) => {
+        const moves = resp?.data.moves.map((e) => {
           return {
             name: e.move.name,
           };
         });
-        const photoUrl = data?.sprites.other["official-artwork"]["front_default"];
+        const photoUrl = resp?.data?.sprites.other["official-artwork"]["front_default"];
         const result = {
-          id: data.id,
-          baseExp: data["base_experience"],
-          name: data.name,
-          height: data.height,
-          weight: data.weight,
+          id: resp?.data.id,
+          baseExp: resp?.data["base_experience"],
+          name: resp?.data.name,
+          height: resp?.data.height,
+          weight: resp?.data.weight,
           photoUrl,
           abilities,
           stats,
           types,
           moves,
         };
+        if (resp.status === 200) {
+          await redis.set("pokemonDetail", JSON.stringify(result));
+        }
         return result;
       } catch (error) {
         return error.response.data;
